@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "binance-endpoints"
+version = "0.1.0"
+description = ""
+authors = ["Istvan Peter Jaray <istvanpeterjaray@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.2"
+pytest = "^8.3.5"
+requests = "^2.32.3"
+binance-connector = "^3.12.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest-asyncio = "^1.0.0"
+httpx = "^0.28.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

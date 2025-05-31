@@ -1,0 +1,239 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  PYTHON_VERSION: '3.11'
+  POETRY_VERSION: '1.8.0'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: Cache Poetry installation
+      uses: actions/cache@v4
+      with:
+        path: ~/.local
+        key: poetry-${{ env.POETRY_VERSION }}-${{ runner.os }}
+        
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ env.POETRY_VERSION }}
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: poetry-deps-${{ env.PYTHON_VERSION }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          poetry-deps-${{ env.PYTHON_VERSION }}-
+        
+    - name: Install dependencies
+      run: |
+        poetry install --no-interaction --no-ansi
+        
+    - name: Run core functional tests
+      run: |
+        # Run all tests - these must pass for deployment
+        poetry run pytest tests/ -v --tb=short
+        
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-${{ github.run_number }}
+        path: |
+          pytest-report.xml
+        retention-days: 30
+        
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Build Docker image
+      run: |
+        docker build -t binance-endpoints:latest .
+        
+    - name: Test Docker image with Nginx
+      run: |
+        # Test the nginx setup
+        docker-compose -f docker-compose.prod.yml build
+        docker-compose -f docker-compose.prod.yml up -d
+        
+        # Wait for services to start
+        sleep 20
+        
+        # Test health endpoint through Nginx (port 80)
+        curl -f http://localhost/health || (docker-compose -f docker-compose.prod.yml logs && exit 1)
+        
+        # Test API docs endpoint
+        curl -f http://localhost/docs || echo "Docs endpoint test failed"
+        
+        # Clean up
+        docker-compose -f docker-compose.prod.yml down
+        
+  deploy:
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+    
+    - name: Get GitHub Actions Runner IP and Update Security Group
+      id: security-group
+      run: |
+        # Get the current public IP of the GitHub Actions runner
+        RUNNER_IP=$(curl -s https://checkip.amazonaws.com)
+        echo "Runner IP: $RUNNER_IP"
+        echo "runner-ip=$RUNNER_IP" >> $GITHUB_OUTPUT
+        
+        # Add SSH rule for current runner IP
+        aws ec2 authorize-security-group-ingress \
+          --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${RUNNER_IP}/32 \
+          --tag-specifications 'ResourceType=security-group-rule,Tags=[{Key=Name,Value=github-actions-temp},{Key=CreatedBy,Value=github-actions}]' || echo "Rule may already exist"
+        
+        echo "✅ Added SSH access for IP: ${RUNNER_IP}/32"
+    
+    - name: Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        # Decode base64 SSH key safely
+        printf "%s" "${{ secrets.EC2_SSH_KEY_B64 }}" | base64 -d > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        
+        # Add host to known_hosts (don't fail if host is temporarily unreachable)
+        ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts || true
+        
+        # Verify SSH key format
+        ssh-keygen -l -f ~/.ssh/id_rsa
+        
+    - name: Deploy to EC2
+      run: |
+        # Create deployment script
+        cat > deploy_script.sh << 'DEPLOY_EOF'
+        #!/bin/bash
+        set -e
+        
+        # Navigate to application directory
+        cd ${{ secrets.EC2_APP_PATH }}
+        
+        # Pull latest changes
+        git pull origin main
+        
+        # Stop existing containers gracefully
+        docker-compose -f docker-compose.prod.yml down --timeout 30 || true
+        
+        # Remove old images to free space
+        docker image prune -f || true
+        
+        # Build and start new containers with Nginx
+        docker-compose -f docker-compose.prod.yml build --no-cache
+        docker-compose -f docker-compose.prod.yml up -d
+        
+        # Wait for services to be healthy
+        sleep 45
+        
+        # Verify deployment with retries (checking port 80 through Nginx)
+        SUCCESS=false
+        for i in {1..5}; do
+          echo "Health check attempt $i..."
+          if curl -f -s http://localhost/health > /dev/null 2>&1; then
+            echo "✅ Health check passed!"
+            # Use a safer approach for displaying the health check response
+            set +e  # Temporarily disable exit on error
+            HEALTH_RESPONSE=$(curl -s http://localhost/health 2>/dev/null)
+            CURL_EXIT_CODE=$?
+            set -e  # Re-enable exit on error
+            
+            if [ $CURL_EXIT_CODE -eq 0 ] && [ ! -z "$HEALTH_RESPONSE" ]; then
+              echo "$HEALTH_RESPONSE"
+            else
+              echo '{"status":"healthy","note":"response_display_failed"}'
+            fi
+            
+            echo ""
+            echo "✅ Deployment completed successfully!"
+            SUCCESS=true
+            break
+          fi
+          echo "Health check attempt $i failed, retrying in 10 seconds..."
+          sleep 10
+        done
+        
+        if [ "$SUCCESS" = true ]; then
+          echo "🎉 Binance Endpoints API is running successfully!"
+          exit 0
+        else
+          echo "❌ Deployment verification failed after 5 attempts!"
+          echo "Container logs:"
+          docker-compose -f docker-compose.prod.yml logs --tail=50
+          exit 1
+        fi
+        DEPLOY_EOF
+        
+        # Transfer and execute the script
+        scp -o StrictHostKeyChecking=no deploy_script.sh ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/tmp/deploy_script.sh
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "chmod +x /tmp/deploy_script.sh && /tmp/deploy_script.sh && rm -f /tmp/deploy_script.sh"
+        
+    - name: Cleanup Security Group Rule
+      if: always()
+      run: |
+        # Remove the temporary SSH rule for this runner
+        RUNNER_IP="${{ steps.security-group.outputs.runner-ip }}"
+        
+        if [ ! -z "$RUNNER_IP" ]; then
+          aws ec2 revoke-security-group-ingress \
+            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${RUNNER_IP}/32 || echo "Rule may have been already removed"
+          
+          echo "🧹 Removed temporary SSH access for IP: ${RUNNER_IP}/32"
+        fi
+        
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Binance Endpoints deployment to EC2 completed successfully"
+          echo "🌐 API available at: http://${{ secrets.EC2_HOST }}"
+          echo "📖 API Documentation: http://${{ secrets.EC2_HOST }}/docs"
+        else
+          echo "❌ Binance Endpoints deployment to EC2 failed"
+        fi 
