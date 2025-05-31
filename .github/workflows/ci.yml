@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+permissions:
+  contents: read
+  packages: write
+
 env:
   PYTHON_VERSION: '3.11'
   POETRY_VERSION: '1.8.0'
@@ -87,6 +91,9 @@ jobs:
         registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
+      # Alternative if GITHUB_TOKEN doesn't work:
+      # username: ${{ secrets.GHCR_USERNAME }}
+      # password: ${{ secrets.GHCR_TOKEN }}
     
     - name: Extract metadata
       id: meta
