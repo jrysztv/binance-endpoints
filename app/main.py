@@ -5,26 +5,24 @@ from app.api.endpoints import binance_endpoints
 
 app = FastAPI(
     title="Binance Connector Backend",
-    description="""
-    ## Binance Analysis API with Different Serialization Formats
-    
-    This API demonstrates 4 different serialization approaches for financial data analysis:
-    
-    ### 🔄 Serialization Formats:
-    - **JSON** - Standard API responses (`application/json`)
-    - **CSV** - Tabular data exports (`text/csv`) 
-    - **HTML** - Human-readable reports (`text/html`)
-    - **XML** - Structured markup (`application/xml`)
-    - **PNG** - Visual charts (`image/png`)
-    
-    ### 📊 Analysis Types:
-    - **Market Statistics** - Aggregated ticker data with sentiment analysis
-    - **Technical Analysis** - Price data with technical indicators  
-    - **Correlation Analysis** - Multi-asset correlation matrices
-    - **Liquidity Analysis** - Order book depth analysis
-    
-    Each endpoint uses the same underlying business logic but different serialization formats!
-    """,
+    description="""## Binance Analysis API with Different Serialization Formats
+
+This API demonstrates 4 different serialization approaches for financial data analysis:
+
+### 🔄 Serialization Formats:
+- **JSON** - Standard API responses (`application/json`)
+- **CSV** - Tabular data exports (`text/csv`) 
+- **HTML** - Human-readable reports (`text/html`)
+- **XML** - Structured markup (`application/xml`)
+- **PNG** - Visual charts (`image/png`)
+
+### 📊 Analysis Types:
+- **Market Statistics** - Aggregated ticker data with sentiment analysis
+- **Technical Analysis** - Price data with technical indicators  
+- **Correlation Analysis** - Multi-asset correlation matrices
+- **Liquidity Analysis** - Order book depth analysis
+
+Each endpoint uses the same underlying business logic but different serialization formats!""",
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
