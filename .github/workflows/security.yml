@@ -9,10 +9,15 @@ on:
 env:
   PYTHON_VERSION: '3.11'
   POETRY_VERSION: '1.8.0'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   security-audit:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     
     steps:
     - name: Checkout code
@@ -46,15 +51,43 @@ jobs:
         echo "🔍 Checking for outdated dependencies..."
         poetry show --outdated || echo "All dependencies are up to date"
         
+    - name: Log in to GitHub Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ secrets.GHCR_USERNAME }}
+        password: ${{ secrets.GHCR_TOKEN }}
+        
     - name: Docker security scan
       continue-on-error: true
       run: |
-        # Build image for security scanning
-        docker build -t binance-endpoints:security-scan .
+        # Check if GHCR image exists and scan it, otherwise build and scan locally
+        if docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest 2>/dev/null; then
+          echo "🔍 Scanning existing GHCR image..."
+          SCAN_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+        else
+          echo "🔍 GHCR image not found, building locally for security scan..."
+          docker build -t binance-endpoints:security-scan .
+          SCAN_IMAGE="binance-endpoints:security-scan"
+        fi
         
-        # Use trivy for container scanning (if available)
+        # Use trivy for container scanning
         docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-          aquasec/trivy image binance-endpoints:security-scan || echo "Container scan completed"
+          aquasec/trivy image --format json --output trivy-results.json $SCAN_IMAGE || echo "Container scan completed"
+          
+        # Display summary
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy image --format table $SCAN_IMAGE || echo "Security scan summary displayed"
+          
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-scan-results-${{ github.run_number }}
+        path: |
+          trivy-results.json
+        retention-days: 30
           
   dependency-update:
     runs-on: ubuntu-latest

@@ -20,10 +20,7 @@ services:
       retries: 3
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
+    image: ghcr.io/jrysztv/binance-endpoints:latest
     # Remove external port exposure - only nginx should be accessible
     expose:
       - "8000"
