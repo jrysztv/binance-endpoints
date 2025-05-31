@@ -46,4 +46,4 @@ docker run -p 8000:8000 binance-backend
 
 API documentation is available at:
 - Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc` 
+- ReDoc: `http://localhost:8000/redoc` # Deployment test
