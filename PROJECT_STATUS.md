@@ -1,277 +1,203 @@
-# Binance Connector Backend - Project Status & Instructions
+# Binance Connector Backend - Project Status
 
 ## 🎯 Assignment Overview
-**Goal:** Build a production-ready Binance connector backend with 4 endpoints for CEU DE3 course submission.
+**Course:** CEU DE3  
+**Goal:** Production-ready Binance connector backend with 4 endpoints using different serializers  
+**Tech Stack:** Python FastAPI + Docker + AWS EC2 + GitHub Actions CI/CD  
+**Repository:** https://github.com/jrysztv/binance-endpoints.git
 
-**Original Assignment:** R-based API deployment, but we're implementing in Python using FastAPI.
+## 📋 Assignment Requirements Status
+- [x] **FastAPI backend with 4 endpoints** ✅ COMPLETE
+- [x] **4 different serialization formats** ✅ COMPLETE (JSON, CSV, HTML, XML, PNG)
+- [x] **Production Docker deployment** ✅ COMPLETE
+- [x] **GitHub Actions CI/CD pipeline** ✅ COMPLETE
+- [x] **TDD approach with pytest** ✅ COMPLETE  
+- [x] **Poetry dependency management** ✅ COMPLETE
+- [x] **NGINX reverse proxy with security** ✅ COMPLETE
+- [x] **Integration with Binance API** ✅ COMPLETE
+- [ ] **Container Registry Deployment** 🔄 PHASE 4 OBJECTIVE
 
-**GitHub Repository:** https://github.com/jrysztv/binance-endpoints.git
+## 🏗️ Current Architecture
 
-## 📋 Project Requirements
-
-### Core Features
-- [ ] 4 API endpoints with different serializers
-- [ ] At least one endpoint with multiple parameters
-- [ ] Production-ready FastAPI backend
-- [ ] Integration with [Binance Python Connector](https://github.com/binance/binance-connector-python)
-- [x] TDD approach with pytest
-- [x] Poetry for dependency management
-
-### Infrastructure & DevOps
-- [ ] GitHub Workflows CI/CD pipeline
-- [x] Production Dockerfile deployment to EC2
-- [x] Devcontainer for local development
-- [ ] Automated testing in CI/CD
-- [x] Health check endpoint (implement first)
-- [x] NGINX reverse proxy for production security
-
-### Deployment
-- [ ] Deploy to own EC2 instance (not provided AMI)
-- [ ] SSH key stored in base64 format for GitHub Secrets
-- [ ] Docker image push to EC2 on repository push
-
-## 🛠 Tech Stack
-- **Backend:** FastAPI (Python)
-- **Dependency Management:** Poetry
-- **Testing:** pytest (TDD approach)
-- **Containerization:** Docker + Devcontainer (Dev/Prod separation)
-- **Reverse Proxy:** NGINX with security headers & rate limiting
-- **CI/CD:** GitHub Workflows
-- **Deployment:** AWS EC2
-- **External API:** Binance Connector Python
-
-## 📁 Project Structure (Current)
+### Application Structure
 ```
 binance-endpoints/
-├── .devcontainer/
-│   └── devcontainer.json         ✅ Complete
-├── .github/
-│   └── workflows/                🔄 TODO
-│       ├── ci.yml
-│       └── deploy.yml
+├── .github/workflows/
+│   ├── ci.yml                          ✅ CI/CD Pipeline
+│   └── security.yml                    ✅ Security & Dependencies
 ├── app/
-│   ├── __init__.py              ✅ Complete
-│   ├── main.py                  ✅ Complete
-│   ├── api/
-│   │   ├── __init__.py          ✅ Complete
-│   │   ├── endpoints/
-│   │   │   ├── __init__.py      ✅ Complete
-│   │   │   ├── health.py        ✅ Complete
-│   │   │   ├── market_data.py   🔄 TODO
-│   │   │   ├── trading.py       🔄 TODO
-│   │   │   └── analytics.py     🔄 TODO
-│   │   └── dependencies.py      🔄 TODO
+│   ├── main.py                         ✅ FastAPI Application
 │   ├── core/
-│   │   ├── __init__.py          ✅ Complete
-│   │   ├── config.py            🔄 TODO
-│   │   └── binance_client.py    🔄 TODO
-│   └── schemas/
-│       ├── __init__.py          ✅ Complete
-│       └── responses.py         ✅ Complete
+│   │   ├── binance_analysis.py         ✅ Business Logic (4 Analysis Types)
+│   │   └── serializers.py              ✅ 5 Serialization Formats
+│   └── api/endpoints/
+│       ├── health.py                   ✅ Health Check
+│       └── binance_endpoints.py        ✅ 4 Binance Endpoints + Charts
 ├── tests/
-│   ├── __init__.py              ✅ Complete
-│   ├── conftest.py              ✅ Complete
-│   ├── test_health.py           ✅ Complete
-│   ├── test_market_data.py      🔄 TODO
-│   ├── test_trading.py          🔄 TODO
-│   └── test_analytics.py        🔄 TODO
-├── Dockerfile                   ✅ Production (multi-stage)
-├── Dockerfile.dev               ✅ Development (with tests)
-├── docker-compose.dev.yml       ✅ Dev with volume mounts
-├── docker-compose.prod.yml      ✅ Production with NGINX
-├── nginx.conf                   ✅ Security headers & rate limiting
-├── .dockerignore                ✅ Complete
-├── .gitignore                   ✅ Complete
-├── pyproject.toml               ✅ Complete
-├── README.md                    ✅ Complete
-└── PROJECT_STATUS.md            ✅ Complete
+│   ├── test_health.py                  ✅ Health Tests
+│   ├── test_binance_analysis.py        ✅ Business Logic Tests
+│   └── test_serializers.py             ✅ Serialization Tests
+├── Dockerfile                          ✅ Production Build
+├── docker-compose.prod.yml             ✅ Production with NGINX
+├── nginx.conf                          ✅ Security & Rate Limiting
+└── pyproject.toml                      ✅ Poetry Dependencies
 ```
 
-## ⚡ Prerequisites
-
-### Local Development
-- [x] Python 3.11+
-- [x] Poetry installed
-- [x] Docker Desktop (running)
-- [ ] VS Code (for devcontainer)
-- [ ] Git configured
-
-### AWS Setup
-- [x] AWS Account with EC2 access
-- [x] EC2 Key Pair created (binance-endpoints-key)
-- [x] Security Group configured (ports 80, 443, 22)
-- [x] EC2 instance launched (Ubuntu 24.04, t2.micro, 63.35.236.42)
-- [x] Docker installed on EC2 (Docker 26.1.3, Compose 2.27.1)
-
-### GitHub Setup
-- [ ] Repository created: https://github.com/jrysztv/binance-endpoints.git
-- [ ] SSH key generated and added to GitHub
-- [ ] SSH private key converted to base64 for GitHub Secrets
-- [ ] Repository secrets configured:
-  - `EC2_SSH_KEY` (base64 encoded private key)
-  - `EC2_HOST` (EC2 public IP)
-  - `EC2_USERNAME` (usually 'ubuntu' or 'ec2-user')
-
-### Binance API
-- [ ] Binance account (for testing)
-- [ ] API keys (optional for public endpoints)
+### Infrastructure Status ✅
+- **EC2 Instance:** Ubuntu 24.04, t2.micro, IP: 63.35.236.42
+- **Security Group:** sg-0d4bddfc2a85814d2 (HTTP/HTTPS/SSH)  
+- **Docker:** Installed and configured
+- **Deployment Method:** Direct build on EC2 (Phase 4 will switch to GHCR)
 
 ## 🚀 Development Phases
 
-### Phase 1: Project Setup ✅ COMPLETE
-- [x] Initialize Poetry project
-- [x] Set up basic FastAPI structure
-- [x] Create health check endpoint
-- [x] Set up pytest configuration
-- [x] Create Dockerfile (production)
-- [x] Create Dockerfile.dev (development)
-- [x] Set up devcontainer
-- [x] Create docker-compose files (dev/prod)
-- [x] NGINX reverse proxy configuration
+### ✅ Phase 1: Infrastructure Setup (COMPLETE)
+- FastAPI project structure with proper organization
+- Docker containerization (development/production)
+- NGINX reverse proxy with security headers
+- Comprehensive test framework setup
+- Local development environment
 
-### Phase 2: CI/CD Pipeline (Current Phase)
-- [x] EC2 Infrastructure Setup (Ubuntu 24.04, Docker installed)
-- [x] SSH Key Setup (base64 encoded for GitHub Secrets)
-- [ ] Create GitHub Repository
-- [ ] Create GitHub Workflows
-- [ ] Configure GitHub Secrets
-- [ ] Test deployment pipeline
+### ✅ Phase 2: CI/CD Pipeline (COMPLETE)  
+- GitHub repository with automated workflows
+- AWS EC2 instance deployment automation
+- GitHub Actions with testing and deployment
+- Security group and secrets management
+- **Status:** Fully operational with automated deployment
 
-### Phase 3: Binance Integration
-- [ ] Integrate Binance Python connector
-- [ ] Implement 4 main endpoints
-- [ ] Add comprehensive tests
-- [ ] Documentation
+### ✅ Phase 3: Binance Integration (COMPLETE)
+**Implemented Features:**
+- **Business Logic:** `BinanceAnalyzer` class with 4 analysis methods:
+  1. Market Statistics with sentiment analysis
+  2. Technical Analysis with indicators (SMA, RSI, MACD, Bollinger Bands)
+  3. Correlation Analysis with portfolio metrics
+  4. Liquidity Analysis with order book depth
 
-### Phase 4: Production Ready
-- [ ] Error handling
-- [ ] Logging
-- [ ] Security considerations
-- [ ] Performance optimization
-- [ ] Final testing
+- **Serialization Formats:** 5 different output formats:
+  1. **JSON** - Standard API responses (`application/json`)
+  2. **CSV** - Tabular data exports (`text/csv`)  
+  3. **HTML** - Styled human-readable reports (`text/html`)
+  4. **XML** - Structured markup (`application/xml`)
+  5. **PNG** - Visual charts and graphs (`image/png`)
 
-## 📸 Screenshot Requirements
-Screenshots needed at these points:
-- [x] Initial project setup in VS Code
-- [x] Poetry dependencies installation
-- [x] First test passing
-- [x] Health endpoint working locally
-- [x] Docker build success
-- [x] Tests running in devcontainer
-- [ ] GitHub Actions pipeline success
-- [ ] EC2 deployment success
-- [ ] All endpoints working on EC2
-- [ ] Final API documentation
+- **API Endpoints:**
+  1. `/api/v1/market/statistics/json` - Market statistics in JSON
+  2. `/api/v1/analysis/technical/{symbol}/csv` - Technical analysis in CSV
+  3. `/api/v1/analysis/correlation/html` - Correlation analysis in HTML
+  4. `/api/v1/market/liquidity/{symbol}/xml` - Liquidity analysis in XML
+  5. `/api/v1/charts/{analysis_type}` - Visual charts in PNG
 
-## 🔧 PowerShell Commands Reference
-```powershell
-# Poetry commands (remember: we're in PowerShell, no &&)
-poetry install
-poetry add fastapi uvicorn pytest
-poetry run pytest
-poetry run uvicorn app.main:app --reload
+- **Testing:** Comprehensive test suite with 100% passing tests
+- **Dependencies:** All required packages (pandas, matplotlib, seaborn, numpy, lxml, jinja2, plotly)
 
-# Docker commands (Development)
-docker-compose -f docker-compose.dev.yml build
-docker-compose -f docker-compose.dev.yml up -d
-docker-compose -f docker-compose.dev.yml exec app poetry run pytest -v
+### 🔄 Phase 4: Submission Finalization (CURRENT OBJECTIVE)
 
-# Docker commands (Production with NGINX)
-docker-compose -f docker-compose.prod.yml build
-docker-compose -f docker-compose.prod.yml up -d
-curl http://localhost/health  # Test through NGINX (port 80)
+**Current Deployment Issue:**  
+The current CI/CD pipeline builds Docker images directly on the EC2 instance. For proper submission, images should be pushed to a container registry and pulled by EC2.
 
-# Git commands
-git add .
-git commit -m "message"
-git push origin main
-```
+#### **Objective 1: GitHub Container Registry (GHCR) Setup**
 
-## 📝 Current Status: PHASE 2 - EC2 SETUP COMPLETE ✅
+**Required Actions:**
+1. **Modify GitHub Actions Workflow:**
+   - Add GHCR login step using `docker/login-action@v3`
+   - Build and push Docker image to `ghcr.io/jrysztv/binance-endpoints`
+   - Tag images with commit SHA and 'latest'
 
-### ✅ Completed Tasks:
-1. ✅ Poetry project initialized with dependencies
-2. ✅ Basic FastAPI structure created
-3. ✅ Health endpoint implemented with TDD
-4. ✅ Tests passing (2/2 tests)
-5. ✅ Local server running successfully
-6. ✅ **Dockerfile.dev created** (development with tests & hot reload)
-7. ✅ **Dockerfile created** (production multi-stage build)
-8. ✅ **docker-compose.dev.yml** (volume mounts, test execution)
-9. ✅ **docker-compose.prod.yml** (NGINX reverse proxy)
-10. ✅ **nginx.conf** (security headers, rate limiting)
-11. ✅ Devcontainer configuration created
-12. ✅ .gitignore and .dockerignore created
-13. ✅ **Tests running successfully in devcontainer**
-14. ✅ **Production NGINX setup working** (port 80 with security headers)
-15. ✅ **EC2 Instance Setup** (Ubuntu 24.04.2 LTS, t2.micro, IP: 63.35.236.42)
-16. ✅ **SSH Key Configuration** (binance-endpoints-key.pem, base64 encoded)
-17. ✅ **Docker Installation on EC2** (Docker 26.1.3, Compose 2.27.1, tested with hello-world)
-18. ✅ **Security Group Configuration** (sg-0d4bddfc2a85814d2, HTTP/HTTPS/SSH access)
+2. **GitHub Secrets Configuration:**
+   ```
+   Required Secrets (add to repository settings):
+   - GHCR_TOKEN: GitHub Personal Access Token with packages:write scope
+   - GHCR_USERNAME: GitHub username (jrysztv)
+   ```
 
-### 🔄 Next Immediate Steps (Phase 2):
-1. **Create GitHub Repository** (https://github.com/jrysztv/binance-endpoints.git)
-2. **Create GitHub Workflows** (ci.yml, deploy.yml - adapt from ratelimiter project)
-3. **Configure GitHub Secrets**:
-   - `EC2_SSH_KEY_B64` (base64 encoded private key)
-   - `EC2_HOST=63.35.236.42`
-   - `EC2_USERNAME=ubuntu`
-   - `EC2_APP_PATH=/opt/binance-endpoints`
-   - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION=eu-west-1`
-   - `EC2_SECURITY_GROUP_ID=sg-0d4bddfc2a85814d2`
-4. **Test deployment pipeline**
+3. **EC2 Configuration Updates:**
+   - Install and configure GitHub CLI or Docker login for GHCR
+   - Update deployment script to pull from GHCR instead of local build
+   - Configure authentication for private registry access
 
-### 🎯 EC2 Setup Commands Reference:
-```bash
-# SSH Connection (from WSL)
-ssh -i ~/.ssh/binance-endpoints.pem ubuntu@63.35.236.42
+4. **Workflow Modifications Needed:**
+   ```yaml
+   # Add to .github/workflows/ci.yml after build step:
+   - name: Log in to GitHub Container Registry
+     uses: docker/login-action@v3
+     with:
+       registry: ghcr.io
+       username: ${{ secrets.GHCR_USERNAME }}
+       password: ${{ secrets.GHCR_TOKEN }}
+   
+   - name: Build and push Docker image
+     uses: docker/build-push-action@v5
+     with:
+       push: true
+       tags: |
+         ghcr.io/jrysztv/binance-endpoints:latest
+         ghcr.io/jrysztv/binance-endpoints:${{ github.sha }}
+   ```
 
-# Docker Installation (on EC2)
-sudo apt update
-sudo apt install -y docker.io docker-compose-v2
-sudo usermod -aG docker ubuntu
-newgrp docker
-docker run hello-world
+5. **EC2 Deployment Script Changes:**
+   ```bash
+   # Replace current build commands with:
+   docker login ghcr.io -u $GHCR_USERNAME -p $GHCR_TOKEN
+   docker pull ghcr.io/jrysztv/binance-endpoints:latest
+   docker compose -f docker-compose.prod.yml up -d
+   ```
 
-# Application Directory Setup (on EC2)
-sudo mkdir -p /opt/binance-endpoints
-sudo chown ubuntu:ubuntu /opt/binance-endpoints
-```
+#### **Objective 2: Update Submission Documentation**
 
-### 📸 Screenshots to Take Now:
-1. **VS Code showing complete project structure** (full screen with date/time)
-2. **Terminal showing development container tests**: `docker-compose -f docker-compose.dev.yml exec app poetry run pytest -v`
-3. **Browser showing health endpoint through NGINX**: http://localhost/health
-4. **Browser showing API docs through NGINX**: http://localhost/docs
-5. **Docker containers running**: `docker ps`
+**PDF Report Updates Required:**
+1. **Deployment Section:** Change from "build-on-EC2" to "GHCR-pull" approach
+2. **Architecture Diagram:** Include GHCR as intermediate registry
+3. **Instructions:** Update setup steps to include GHCR configuration
+4. **Screenshots:** Capture GHCR package registry showing published images
 
-### 🎉 Major Achievement:
-**Production-Ready Docker Setup Complete!** 
-- ✅ Development environment with hot reload and volume mounts
-- ✅ Production environment with NGINX reverse proxy
-- ✅ Security headers and rate limiting configured
-- ✅ Multi-stage builds for optimized production images
-- ✅ Tests running successfully in containers
+**New Documentation Should Include:**
+- GHCR registry URL and versioning strategy
+- Container image security scanning results
+- Registry authentication setup steps
+- Deployment verification commands
 
-### Instructions for Future Chat Sessions:
-1. Always read this document first
-2. Check current phase and completed tasks
-3. Update checkboxes as tasks are completed
-4. Take screenshots where indicated
-5. Remember PowerShell syntax (no &&)
-6. Always run tests via `poetry run pytest` or in containers
-7. Update dependencies via `poetry add` or `poetry update`
+## 📊 Current Status: Phase 3 Complete ✅
 
-## 🐛 Known Issues & Solutions
-- **SSH Key for GitHub:** Must be base64 encoded when storing in GitHub Secrets
-- **PowerShell:** Use separate commands instead of && chaining
-- **Testing:** Always use `poetry run pytest` not bare `pytest`
-- **Docker:** Docker Desktop must be running for build commands
-- **NGINX:** Production setup uses port 80, development uses port 8000
+### ✅ Fully Working Features
+- **4 Binance Analysis Endpoints** with real-time data
+- **5 Serialization Formats** (JSON, CSV, HTML, XML, PNG)
+- **Comprehensive Business Logic** with financial calculations
+- **Visual Charts** using matplotlib with technical indicators
+- **Complete Test Suite** (health + business logic + serializers)
+- **Production Deployment** with NGINX security
+- **Automated CI/CD** with testing and deployment
 
-## 📚 Useful Links
+### 🎯 Phase 4 Priority: Container Registry Migration
+**Immediate Next Actions:**
+1. Set up GitHub Personal Access Token for packages
+2. Configure GHCR authentication in GitHub secrets
+3. Modify CI/CD workflow for GHCR push/pull
+4. Update EC2 deployment scripts
+5. Test end-to-end GHCR deployment
+6. Update submission PDF with new architecture
+
+## 🌐 Live Endpoints (Currently Active)
+- **Base URL:** http://63.35.236.42
+- **API Documentation:** http://63.35.236.42/docs
+- **JSON Endpoint:** http://63.35.236.42/api/v1/market/statistics/json
+- **CSV Endpoint:** http://63.35.236.42/api/v1/analysis/technical/BTCUSDT/csv
+- **HTML Endpoint:** http://63.35.236.42/api/v1/analysis/correlation/html  
+- **XML Endpoint:** http://63.35.236.42/api/v1/market/liquidity/BTCUSDT/xml
+- **Chart Endpoint:** http://63.35.236.42/api/v1/charts/technical?symbol=BTCUSDT
+
+## 📈 Success Metrics ✅
+- **Functionality:** 4 endpoints with 5 serialization formats working
+- **Testing:** All tests passing (health + business logic + serializers)
+- **Deployment:** Automated CI/CD with production deployment  
+- **Performance:** Real-time Binance data with sub-second response times
+- **Security:** NGINX security headers, rate limiting, error handling
+- **Documentation:** Auto-generated API docs with examples
+
+---
+**Last Updated:** Phase 3 Complete - All Binance Endpoints Operational  
+**Next Milestone:** Phase 4 - GitHub Container Registry Migration for Submission
+
+## 📚 Documentation References
 - [Binance Python Connector](https://github.com/binance/binance-connector-python)
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [Poetry Documentation](https://python-poetry.org/docs/)
-- [GitHub Workflow Examples](https://docs.github.com/en/actions/examples)
-- [Reference Project](https://github.com/jrysztv/ratelimiter/tree/main) - Similar Docker/NGINX setup 

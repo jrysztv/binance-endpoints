@@ -1,0 +1,11 @@
+metric,value
+summary_total_symbols,2
+summary_avg_price_change_percent,-1.2285
+summary_avg_volatility,3.4243683383273185
+summary_max_volatility,4.66725648701386
+summary_min_volatility,2.181480189640776
+summary_total_volume,600768.41698
+--- top_performers ---,
+symbol,price_change_percent
+BTCUSDT,-0.564
+ETHUSDT,-1.893

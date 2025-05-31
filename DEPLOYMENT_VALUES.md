@@ -1,63 +1,51 @@
-# Deployment Values Reference
+# Quick Reference - Deployment Values
 
-## 🔧 GitHub Secrets Configuration
+## 🎯 Project Specific Values
+**Status:** ✅ COMPLETE - All values configured and working
 
-Based on your PROJECT_STATUS.md, here are the exact values to use when setting up GitHub secrets:
-
-### AWS Configuration
+### EC2 Instance Configuration  
 ```
+Instance ID: i-xxxxx (Ubuntu 24.04, t2.micro)
+Public IP: 63.35.236.42
+Security Group: sg-0d4bddfc2a85814d2
+Region: eu-west-1
+```
+
+### GitHub Secrets (Configured)
+```bash
+AWS_ACCESS_KEY_ID=AKIA... 
+AWS_SECRET_ACCESS_KEY=xxx...
 AWS_REGION=eu-west-1
-```
-
-### EC2 Configuration  
-```
 EC2_HOST=63.35.236.42
 EC2_USERNAME=ubuntu
 EC2_APP_PATH=/opt/binance-endpoints
 EC2_SECURITY_GROUP_ID=sg-0d4bddfc2a85814d2
+EC2_SSH_KEY_B64=[base64-encoded-private-key]
 ```
 
-### SSH Key
-```
-EC2_SSH_KEY_B64=[contents of your ssh-key-base64.txt file]
-```
-
-## 🚀 Commands to Run
-
-### 1. Get SSH Key Content
+## 🔑 SSH Key Setup Commands
 ```bash
-# Copy this to GitHub Secret EC2_SSH_KEY_B64
-cat ssh-key-base64.txt
+# Convert SSH key to base64 (already done)
+cd /c/Users/ijara_go12/.ssh/
+cat binance-endpointss.pem | base64 -w 0 > binance-endpoints-key-base64.txt
+
+# Test SSH connection
+ssh -i binance-endpointss.pem ubuntu@63.35.236.42
 ```
 
-### 2. Create GitHub Repository
+## 🚀 EC2 Git Setup (Completed)
 ```bash
-# If not already created
-git remote add origin https://github.com/jrysztv/binance-endpoints.git
-git branch -M main
-git push -u origin main
-```
+# Configure git with credential storage
+git config --global credential.helper store
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
 
-### 3. Test EC2 Connection
-```bash
-# From WSL/Linux
-ssh -i binance-endpoints-key ubuntu@63.35.236.42
-```
-
-### 4. Prepare EC2 for First Deployment
-```bash
-# On EC2 instance
-sudo mkdir -p /opt/binance-endpoints
-sudo chown ubuntu:ubuntu /opt/binance-endpoints
+# Initial repository clone in /opt/binance-endpoints
 cd /opt/binance-endpoints
-
-# Clone repository (use HTTPS with Personal Access Token)
 git clone https://github.com/jrysztv/binance-endpoints.git .
 ```
 
-## 📋 AWS IAM Setup
-
-### Minimal IAM Policy for GitHub Actions
+## 📋 Minimal IAM Policy (Security Reference)
 ```json
 {
     "Version": "2012-10-17",
@@ -81,9 +69,11 @@ git clone https://github.com/jrysztv/binance-endpoints.git .
 }
 ```
 
-## 🎯 Next Steps
-1. Create IAM User in AWS Console
-2. Get AWS Access Key ID and Secret Access Key  
-3. Create GitHub repository
-4. Add all secrets to GitHub repository settings
-5. Push code to trigger first deployment 
+## 🔗 Live Endpoints
+- **API Base:** http://63.35.236.42
+- **Health Check:** http://63.35.236.42/health  
+- **API Documentation:** http://63.35.236.42/docs
+- **GitHub Actions:** https://github.com/jrysztv/binance-endpoints/actions
+
+---
+**Note:** This setup is complete and operational. Use as reference for similar projects. 
