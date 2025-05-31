@@ -24,8 +24,8 @@ RUN poetry config virtualenvs.create false \
 # Production stage
 FROM python:3.11-slim AS production
 
-# Add GitHub Container Registry recommended labels
-LABEL org.opencontainers.image.source=https://github.com/jrysztv/binance-endpoints
+# Add GitHub Container Registry recommended labels for repository linking
+LABEL org.opencontainers.image.source https://github.com/jrysztv/binance-endpoints
 LABEL org.opencontainers.image.description="Production-ready Binance connector backend with FastAPI, providing 4 endpoints with different serialization formats (JSON, CSV, HTML, XML, PNG)"
 LABEL org.opencontainers.image.licenses=MIT
 
