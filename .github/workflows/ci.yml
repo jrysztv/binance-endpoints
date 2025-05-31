@@ -111,7 +111,6 @@ jobs:
       run: |
         # Create temporary docker-compose for testing with the pushed image
         cat > docker-compose.test.yml << 'EOF'
-        version: '3.8'
         services:
           nginx:
             image: nginx:alpine
@@ -123,7 +122,7 @@ jobs:
               app:
                 condition: service_healthy
           app:
-            image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}-${{ github.sha }}
             expose:
               - "8000"
             environment:
